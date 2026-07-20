@@ -14,3 +14,30 @@
 **Setup confirmation:** [X] App runs locally at localhost:5173
 
 **Cohort ledger:** [X] Issue added to cohort ledger
+
+---
+
+## "Is this right for me?" checklist:
+
+### Part 1 — Understanding the Issue
+
+- [X] I can explain the problem and expected behavior in 2–3 sentences without reading the issue.
+- [X] I've located the relevant files and confirmed they exist in the codebase. (`agent/orchestrator.py`, Redis session key logic)
+- [X] I can describe a concrete before-and-after: what the user sees before the fix (stale tool results from a prior review bleed into a new review for the same `profile_id`) and after (each review starts with clean session state).
+
+### Part 2 — Tier Fit
+
+- [X] Tier is a realistic match for where I am right now. (Issue is tagged Tier 1 — self-contained, localized fix.)
+- [X] This is my first open source contribution
+
+### Part 3 — Codebase Readiness
+
+- [X] I've found and read the specific code the issue references — not just the file, but the function/section (`Orchestrator.run()` and wherever the Redis key is built, e.g. `f"...{profile_id}..."`).
+- [X] I've read enough surrounding context that I can write a rough plan for the fix without looking anything up (e.g. scope key to review/session ID vs. clear state at run start — tradeoffs of each).
+- [X] I've found the test file for this module and read at least one test end-to-end (likely `tests/unit/` — orchestrator or session-state tests).
+
+### Part 4 — Scope and Time
+
+- [X] I've checked the issue comments and the cohort ledger's Claims count, and I'm fine with how many others are on this issue.
+- [X] I've estimated the time this will take (Tier 1 → ~3–6 hrs) and I'm confident I can complete it before the Week 9 deadline.
+- [X] This issue has no open blockers or dependencies on other unresolved issues.
