@@ -2,7 +2,7 @@
 Agent session state is not cleared between reviews for the same user.
 """
 
-from typing import Any, Optional
+from typing import Any
 from unittest.mock import MagicMock
 
 import pytest
@@ -15,7 +15,7 @@ class FakeRedis:
     def __init__(self) -> None:
         self.data: dict[str, Any] = {}
 
-    def get(self, key: str) -> Optional[Any]:
+    def get(self, key: str) -> Any | None:
         return self.data.get(key)
 
     def setex(self, key: str, ttl: int, value: Any) -> None:
