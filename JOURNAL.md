@@ -46,12 +46,12 @@
 
 ## Week 8 — Reproduction & solution planning
 
-**Reproduction commit link:** [e3d3e08](https://github.com/ascherj/pathreview/commit/e3d3e08)
+**Reproduction commit link:** [e3d3e08](https://github.com/AbinavRamasamy/PathReview/commit/e3d3e08)
 
 **Reproduction summary:**
 Created unit test `test_session_state_leakage_between_reviews` in `tests/unit/test_orchestrator.py`. Running `Orchestrator.run()` twice for the same `profile_id` loaded previously stored Redis session state and merged new tool execution results into it, causing stale tool results (such as `github_tool` from run 1) to bleed into run 2's session state.
 
-**PLAN.md link:** [PLAN.md](PLAN.md)
+**PLAN.md link:** [PLAN.md](https://github.com/AbinavRamasamy/PathReview/blob/fix/43-update-agent-session-state/PLAN.md)
 
 **Walkthrough video (recommended):** N/A
 
