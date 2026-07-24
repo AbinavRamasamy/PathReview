@@ -41,3 +41,19 @@
 - [X] I've checked the issue comments and the cohort ledger's Claims count, and I'm fine with how many others are on this issue.
 - [X] I've estimated the time this will take (Tier 1 → ~3–6 hrs) and I'm confident I can complete it before the Week 9 deadline.
 - [X] This issue has no open blockers or dependencies on other unresolved issues.
+
+---
+
+## Week 8 — Reproduction & solution planning
+
+**Reproduction commit link:** [Pending commit]
+
+**Reproduction summary:**
+Created unit test `test_session_state_leakage_between_reviews` in `tests/unit/test_orchestrator.py`. Running `Orchestrator.run()` twice for the same `profile_id` loaded previously stored Redis session state and merged new tool execution results into it, causing stale tool results (such as `github_tool` from run 1) to bleed into run 2's session state.
+
+**PLAN.md link:** [PLAN.md](PLAN.md)
+
+**Walkthrough video (recommended):** N/A
+
+**Blockers or open questions:**
+None.
