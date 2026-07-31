@@ -13,15 +13,18 @@ class FakeRedis:
 
     def __init__(self):
         self.data = {}
+        self.ttls = {}
 
     def get(self, key):
         return self.data.get(key)
 
     def setex(self, key, ttl, value):
         self.data[key] = value
+        self.ttls[key] = ttl
 
     def delete(self, key):
         self.data.pop(key, None)
+        self.ttls.pop(key, None)
 
 
 @pytest.mark.unit
@@ -84,3 +87,55 @@ class TestOrchestrator:
             "REPRODUCED BUG #43 / C-03: Stale 'github_tool' result from previous review "
             "was retained in session state for profile_id."
         )
+
+    def test_persisted_state_matches_current_run_results_only(self, orchestrator, session_store):
+        """Persisted session state should mirror only the current run's tool_results."""
+        profile_id = "user_profile_456"
+
+        profile_data = {"resume_text": "Backend engineer"}
+        result = orchestrator.run(profile_id, profile_data)
+
+        stored_state = session_store.get(profile_id)
+        assert stored_state == result["tool_results"]
+
+    def test_ttl_preserved_on_persist(self, orchestrator, session_store):
+        """Session state should still be persisted with the default TTL."""
+        profile_id = "user_profile_789"
+
+        orchestrator.run(profile_id, {"resume_text": "Data engineer"})
+
+        assert session_store.redis.ttls[f"session:{profile_id}"] == 3600
+
+    def test_run_without_session_store_does_not_raise(self):
+        """Orchestrator should work when session_store is not configured (backward compat)."""
+        mock_skill_tool = MagicMock()
+        mock_skill_tool.execute.return_value = MagicMock(data={"skills": ["Python"]})
+
+        orchestrator = Orchestrator(tools={"skill_extractor": mock_skill_tool}, session_store=None)
+
+        result = orchestrator.run("user_profile_no_store", {"resume_text": "Full stack engineer"})
+
+        assert result["tool_results"]["skill_extractor"] == {"skills": ["Python"]}
+
+    def test_failed_tool_does_not_corrupt_next_clean_run(self, orchestrator, session_store):
+        """A tool failure in one run should not leak an error result into a later clean run."""
+        profile_id = "user_profile_failure"
+
+        orchestrator.tools["github_tool"].execute.side_effect = RuntimeError("GitHub API down")
+        profile_data_1 = {
+            "github_username": "bob",
+            "projects": [{"github_repo": "repo-B"}],
+        }
+        result_1 = orchestrator.run(profile_id, profile_data_1)
+        assert result_1["tool_results"]["github_tool"]["success"] is False
+
+        # Second, unrelated review for the same profile should start clean
+        orchestrator.tools["github_tool"].execute.side_effect = None
+        orchestrator.tools["github_tool"].execute.return_value = MagicMock(
+            data={"repo": "repo-A", "stars": 10}
+        )
+        result_2 = orchestrator.run(profile_id, {"resume_text": "QA engineer"})
+
+        assert "github_tool" not in result_2["tool_results"]
+        stored_state = session_store.get(profile_id)
+        assert "github_tool" not in stored_state
