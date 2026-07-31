@@ -57,3 +57,36 @@ Created unit test `test_session_state_leakage_between_reviews` in `tests/unit/te
 
 **Blockers or open questions:**
 None.
+
+---
+
+## Week 9 — Solution building & PR submission
+
+### Check-in 1 (mid-week)
+
+**Current progress:**
+Implemented the fix in `agent/orchestrator.py`: `Orchestrator.run()` no longer loads and merges previous Redis session state into the current run's results — it now persists only the current run's `tool_results` for the `profile_id` key, so a stale tool result from a prior review can never bleed into a later one. Repro test `test_session_state_not_cleared_between_reviews` (from Week 8) now passes. Added four more unit tests to `tests/unit/test_orchestrator.py` covering PLAN.md's edge cases: persisted state matches current-run results only, Redis TTL is still preserved on persist, `Orchestrator.run()` works with `session_store=None` (backward compat), and a failed tool in one run doesn't leak an error result into a later clean run. Ran `make test-unit` and `make check` before and after the change to confirm no new failures — pre-existing baseline was 54 failing unit tests / 183 lint errors (all unrelated to this issue, e.g. `test_pii_scrubber.py`, `test_resume_parser.py`); after the fix it's 53 failing (only our repro test count improved) with the same failure set, and no new lint/format/type errors introduced in touched files. Also had to add missing mypy return/param type annotations to `error_handling.py`, `context_manager.py`, and `session_store.py` — pre-existing gaps that the local mypy pre-commit hook surfaces whenever it follows `orchestrator.py`'s import chain; no behavior change, just what was needed to get a clean commit. Split the work into three commits: the orchestrator fix (+ the supporting type-annotation fixes), the new tests, and this JOURNAL.md update.
+
+**Next steps:**
+Open a draft PR and request peer/mentor feedback in Slack, then address feedback and submit.
+
+**Blockers:**
+None.
+
+---
+
+### Check-in 2 (end of week)
+
+**PR link:** TBD — not yet opened
+
+**Branch:** fix/43-update-agent-session-state
+
+**What you built:**
+Fixed session state leakage between reviews for the same user (Issue #43) by removing the load-and-merge of prior Redis session state in `Orchestrator.run()`; each run now persists only its own fresh `tool_results`, so old tool output (e.g. `github_tool` from a previous review) can no longer resurface in a later review's session state.
+
+**Tests added or updated:**
+`tests/unit/test_orchestrator.py` — updated `FakeRedis` to track TTLs per key, and added `test_persisted_state_matches_current_run_results_only`, `test_ttl_preserved_on_persist`, `test_run_without_session_store_does_not_raise`, and `test_failed_tool_does_not_corrupt_next_clean_run`, alongside the existing Week 8 repro test which now passes.
+
+**Self-review confirmation:** [X] make check passes (no new failures beyond documented pre-existing baseline)  [X] make test-unit passes (no new failures beyond documented pre-existing baseline)
+
+**Draft PR feedback received from:** none yet
