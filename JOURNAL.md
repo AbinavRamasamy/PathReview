@@ -77,7 +77,7 @@ None.
 
 ### Check-in 2 (end of week)
 
-**PR link:** TBD — not yet opened
+**PR link:** https://github.com/ascherj/pathreview/pull/642
 
 **Branch:** fix/43-update-agent-session-state
 
@@ -89,4 +89,4 @@ Fixed session state leakage between reviews for the same user (Issue #43) by rem
 
 **Self-review confirmation:** [X] make check passes (no new failures beyond documented pre-existing baseline)  [X] make test-unit passes (no new failures beyond documented pre-existing baseline)
 
-**Draft PR feedback received from:** none yet
+**Draft PR feedback received from:** None Yet
