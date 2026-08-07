@@ -80,10 +80,14 @@ class Orchestrator:
         Returns:
             List of (tool_name, tool_input) tuples
         """
-        plan = []
+        plan: list[tuple[str, dict]] = []
+        if not self.tools:
+            return plan
+
+        tools = self.tools or {}
 
         # Conditionally add GitHub tool
-        if profile_data.get("github_username"):
+        if profile_data.get("github_username") and "github_tool" in tools:
             for project in profile_data.get("projects", []):
                 if project.get("github_repo"):
                     plan.append(
@@ -98,15 +102,15 @@ class Orchestrator:
                     break  # Only process first repo for now
 
         # Tech detector (if files available)
-        if profile_data.get("files"):
+        if profile_data.get("files") and "tech_detector" in tools:
             plan.append(("tech_detector", {"files": profile_data["files"]}))
 
         # README scorer
-        if profile_data.get("readme_content"):
+        if profile_data.get("readme_content") and "readme_scorer" in tools:
             plan.append(("readme_scorer", {"readme_content": profile_data["readme_content"]}))
 
         # Skill extractor
-        if profile_data.get("resume_text"):
+        if profile_data.get("resume_text") and "skill_extractor" in tools:
             plan.append(
                 (
                     "skill_extractor",
@@ -117,8 +121,8 @@ class Orchestrator:
                 )
             )
 
-        # Market analyzer (if skills detected)
-        if plan:  # Only if other tools executed
+        # Market analyzer (if skills detected and tool configured)
+        if plan and "market_analyzer" in tools:
             plan.append(
                 ("market_analyzer", {"detected_skills": {}})  # Will be populated by context
             )
