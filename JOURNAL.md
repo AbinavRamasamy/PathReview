@@ -87,6 +87,41 @@ Fixed session state leakage between reviews for the same user (Issue #43) by rem
 **Tests added or updated:**
 `tests/unit/test_orchestrator.py` — updated `FakeRedis` to track TTLs per key, and added `test_persisted_state_matches_current_run_results_only`, `test_ttl_preserved_on_persist`, `test_run_without_session_store_does_not_raise`, and `test_failed_tool_does_not_corrupt_next_clean_run`, alongside the existing Week 8 repro test which now passes.
 
-**Self-review confirmation:** [X] make check passes (no new failures beyond documented pre-existing baseline)  [X] make test-unit passes (no new failures beyond documented pre-existing baseline)
+**Self-review confirmation:**
+[X] make check passes (no new failures beyond documented pre-existing baseline)
+[X] make test-unit passes (no new failures beyond documented pre-existing baseline)
 
 **Draft PR feedback received from:** N/A
+
+---
+
+## Week 10 — Iteration & reflection
+
+### Reviewer feedback
+
+**Feedback received:** [ ] Yes  [X] No — still awaiting review
+
+**Summary of feedback:**
+N/A
+
+**How you responded:**
+N/A
+
+---
+
+### Reflection
+
+**What was harder than you expected?**
+Navigating pre-existing tech debt and strict local CI tooling was significantly harder than expected. When touching `agent/orchestrator.py` to fix the Redis session state leak, running the local pre-commit hook triggered mypy errors on pre-existing missing type annotations across imported helper files (`error_handling.py`, `context_manager.py`, and `session_store.py`). Additionally, navigating a pre-existing baseline of 54 failing unit tests and 183 lint errors meant I had to strictly audit test outputs before and after my changes to ensure zero regressions were introduced.
+
+**What did you learn about working in a large codebase?**
+I learned that contributing to production software requires surgical precision, strict backward compatibility, and deep respect for existing architectural contracts. Unlike solo projects where you can freely refactor, working in a shared codebase means understanding how your change impacts downstream callers (e.g., ensuring `Orchestrator.run()` still works seamlessly when `session_store` is `None`) and making the minimal viable change required to fix the issue without adding unintended side effects.
+
+**How did AI tools help — and where did they fall short?**
+AI tools were invaluable for rapid context mapping and root-cause localization—helping trace how `Orchestrator.run()` was loading prior Redis state by `profile_id` and merging tool results. However, AI fell short when navigating local environment edge cases, such as understanding transitive pre-commit hook failures across type-stub missing modules or distinguishing pre-existing failing test suite noise from genuine code regressions. Human judgment was required to write clean unit tests and resolve complex mypy type contracts.
+
+**What would you do differently if you started over?**
+If starting over, I would perform a comprehensive test baseline audit on Day 1 before writing any code or reproduction tests. Documenting all pre-existing test failures and lint warnings up front would have eliminated ambiguity during test-driven reproduction in Week 8. I would also engage earlier in the project's Slack channels to discuss state key scoping design before opening the draft PR.
+
+**What are you most proud of from this module?**
+I am most proud of writing a clean, minimal fix that completely resolves the session state leakage while maintaining 100% backward compatibility and introducing five robust unit tests covering edge cases (such as TTL preservation, failed tool isolation, and optional `session_store`).
